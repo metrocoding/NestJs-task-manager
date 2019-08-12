@@ -20,4 +20,9 @@ export class TasksService {
     }
     return task;
   }
+
+  // Create task ----------------------------------------------------------------
+  async createTask(createTaskDto: CreateTaskDto): Promise<Task> {
+    return await this.taskRepository.createTask(createTaskDto);
+  }
 }
