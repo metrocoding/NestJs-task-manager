@@ -6,6 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Task } from './task.entity';
 import { TaskStatus } from './task-status.enum';
 import { User } from '../auth/user.entity';
+import { GetUser } from '../auth/get-user.decorator';
 
 @Injectable()
 export class TasksService {
@@ -27,7 +28,7 @@ export class TasksService {
   async getTaskById(id: number, user: User): Promise<Task> {
     const task = await this.taskRepository.findOne({ id, userId: user.id });
     if (!task) {
-      throw new NotFoundException(`No task found with ID:${id} for user ${user.username}`);
+      throw new NotFoundException(`There is no task with ID:${id} for user ${user.username}`);
     }
     return task;
   }
@@ -38,24 +39,21 @@ export class TasksService {
   }
 
   // ------------------------------------------------------------------------------------
-  async deleteTaskById(id: number): Promise<object> {
-    const result = await this.taskRepository.delete(id);
+  async deleteTaskById(id: number, @GetUser() user: User): Promise<object> {
+    const result = await this.taskRepository.delete({ id, userId: user.id });
     if (result.affected === 0) {
-      throw new NotFoundException(`No task found with ID:${id}`);
+      throw new NotFoundException(`There is no task with ID:${id} for user ${user.username}`);
     }
     return {
       statusCode: 200,
       success: true,
-      message: `Task with ID: ${id} deleted`,
+      message: `Task with ID:${id} deleted`,
     };
   }
 
   // ------------------------------------------------------------------------------------
   async updateTaskStatus(id: number, status: TaskStatus, user: User): Promise<Task> {
     const task = await this.getTaskById(id, user);
-    if (!task) {
-      throw new NotFoundException(`No task found with ID:${id} for user ${user.username}`);
-    }
     task.status = status;
     await task.save();
     return task;
